@@ -449,6 +449,193 @@ int dstr_insert_format(DString dstr, size_t index, const char *format, ...) {
 }
 
 
+// 判断一个动态字符串是否开始于一个 C 字符串
+bool dstr_start_with_cstr(const DString dstr, const char *prefix) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !prefix) return false;
+
+    // 如果前缀长度大于动态字符串长度，则不可能匹配
+    size_t prefix_length = strlen(prefix);
+    if (prefix_length > dstr->length) return false;
+
+    return strncmp(dstr->data, prefix, prefix_length) == 0;
+}
+// 判断一个动态字符串是否开始于另一个动态字符串
+bool dstr_start_with(const DString dstr, const DString prefix) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !prefix || !prefix->data) return false;
+
+    // 如果前缀长度大于动态字符串长度，则不可能匹配
+    if (prefix->length > dstr->length) return false;
+
+    return strncmp(dstr->data, prefix->data, prefix->length) == 0;
+}
+// 判断一个动态字符串是否结束于一个 C 字符串
+bool dstr_end_with_cstr(const DString dstr, const char *suffix) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !suffix) return false;
+
+    // 如果后缀长度大于动态字符串长度，则不可能匹配
+    size_t suffix_length = strlen(suffix);
+    if (suffix_length > dstr->length) return false;
+
+    return strncmp(dstr->data + dstr->length - suffix_length, 
+        suffix, suffix_length) == 0;
+}
+// 判断一个动态字符串是否结束于另一个动态字符串
+bool dstr_end_with(const DString dstr, const DString suffix) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !suffix || !suffix->data) return false;
+
+    // 如果后缀长度大于动态字符串长度，则不可能匹配
+    if (suffix->length > dstr->length) return false;
+
+    return strncmp(dstr->data + dstr->length - suffix->length, 
+        suffix->data, suffix->length) == 0;
+}
+// 判断一个动态字符串是否包含一个 C 字符串
+bool dstr_contain_cstr(const DString dstr, const char *substr) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !substr) return false;
+
+    return strstr(dstr->data, substr) != NULL;
+}
+// 判断一个动态字符串是否包含另一个动态字符串
+bool dstr_contain(const DString dstr, const DString substr) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !substr || !substr->data) return false;
+
+    return strstr(dstr->data, substr->data) != NULL;
+}
+// 判断一个动态字符串是否与一个 C 字符串相等
+bool dstr_equal_cstr(const DString dstr, const char *cstr) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !cstr) return false;
+
+    // 长度不等则不可能相等
+    if (dstr->length != strlen(cstr)) return false;
+
+    return strcmp(dstr->data, cstr) == 0;
+}
+// 判断一个动态字符串是否与另一个动态字符串相等
+bool dstr_equal(const DString dstr, const DString other) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !other || !other->data) return false;
+
+    // 长度不等则不可能相等
+    if (dstr->length != other->length) return false;
+
+    return strcmp(dstr->data, other->data) == 0;
+}
+
+// 查找一个 C 字符串在一个动态字符串中第一次出现的位置，返回 -1 表示未找到。
+ssize_t dstr_find_cstr(const DString dstr, const char *substr) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !substr) return -1;
+
+    char *pos = strstr(dstr->data, substr);
+    if (!pos) return -1;
+
+    return (ssize_t)(pos - dstr->data);
+}
+// 查找一个动态字符串在另一个动态字符串中第一次出现的位置，返回 -1 表示未找到。
+ssize_t dstr_find(const DString dstr, const DString substr) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !substr || !substr->data) return -1;
+
+    char *pos = strstr(dstr->data, substr->data);
+    if (!pos) return -1;
+
+    return (ssize_t)(pos - dstr->data);
+}
+// 查找一个 C 字符串在一个动态字符串中最后一次出现的位置，返回 -1 表示未找到。
+ssize_t dstr_rfind_cstr(const DString dstr, const char *substr) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !substr) return -1;
+
+    char *pos = strrstr(dstr->data, substr);
+    if (!pos) return -1;
+
+    return (ssize_t)(pos - dstr->data);
+}
+// 查找一个动态字符串在另一个动态字符串中最后一次出现的位置，返回 -1 表示未找到。
+ssize_t dstr_rfind(const DString dstr, const DString substr) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !substr || !substr->data) return -1;
+
+    char *pos = strrstr(dstr->data, substr->data);
+    if (!pos) return -1;
+
+    return (ssize_t)(pos - dstr->data);
+}
+// 统计一个 C 字符串在一个动态字符串中出现的次数。
+size_t dstr_count_cstr(const DString dstr, const char *substr) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !substr) return 0;
+
+    size_t count = 0;
+    char *pos = dstr->data;
+
+    while ((pos = strstr(pos, substr)) != NULL) {
+        count++;
+        pos += strlen(substr);
+    }
+
+    return count;
+}
+// 统计一个动态字符串在另一个动态字符串中出现的次数。
+size_t dstr_count(const DString dstr, const DString substr) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !substr || !substr->data) return 0;
+
+    size_t count = 0;
+    char *pos = dstr->data;
+
+    while ((pos = strstr(pos, substr->data)) != NULL) {
+        count++;
+        pos += substr->length;
+    }
+
+    return count;
+}
+// 返回一个 C 字符串在一个动态字符串中第 n 次出现的位置，返回 -1 表示未找到。
+ssize_t dstr_find_nth_cstr(const DString dstr, const char *substr, size_t n) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !substr) return -1;
+
+    size_t count = 0;
+    char *pos = dstr->data;
+
+    while ((pos = strstr(pos, substr)) != NULL) {
+        if (count == n) {
+            return (ssize_t)(pos - dstr->data);
+        }
+        count++;
+        pos += strlen(substr);
+    }
+
+    return -1;
+}
+// 返回一个动态字符串在另一个动态字符串中第 n 次出现的位置，返回 -1 表示未找到。
+ssize_t dstr_find_nth(const DString dstr, const DString substr, size_t n) {
+    // 指针参数检查，防止空指针访问
+    if (!dstr || !dstr->data || !substr || !substr->data) return -1;
+
+    size_t count = 0;
+    char *pos = dstr->data;
+
+    while ((pos = strstr(pos, substr->data)) != NULL) {
+        if (count == n) {
+            return (ssize_t)(pos - dstr->data);
+        }
+        count++;
+        pos += substr->length;
+    }
+
+    return -1;
+}
+
+
 /* 内部函数定义 */
 // 计算合适的容量值
 static size_t calculate_new_capacity(const DString dstring, size_t needed_capacity) {
