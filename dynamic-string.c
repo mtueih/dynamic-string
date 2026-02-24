@@ -29,6 +29,8 @@ static inline void memory_insert(
 );
 // 计算格式化字符串所需长度
 static size_t calculate_format_string_length(const char *format, va_list args);
+// 查找字符串最后一次出现的位置
+static char *strrstr(const char *haystack, const char *needle);
 
 
 // API 实现
@@ -704,4 +706,19 @@ static size_t calculate_format_string_length(const char *format, va_list args) {
     va_end(temp_args);
 
     return needed_length < 0 ? 0 : (size_t)needed_length;
+}
+
+// 查找字符串最后一次出现的位置
+static char *strrstr(const char *haystack, const char *needle) {
+    char *result = NULL;
+    char *current;
+
+    if (!haystack || !needle) return NULL;
+
+    while ((current = strstr(haystack, needle)) != NULL) {
+        result = current;
+        haystack = current + 1; // 继续搜索下一个位置
+    }
+
+    return result;
 }
