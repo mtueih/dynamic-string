@@ -269,7 +269,7 @@ int dstr_sub(dstr_t *p_dst_dstr, const dstr_t *p_src_dstr, size_t index, size_t 
  *  ENOMEM：代表内存分配失败。
  *
  */
-int dstr_replace_cstr(dstr_t *p_dstr, const char *old_cstr, const char *new_cstr, size_t n, bool backward);
+size_t dstr_replace_cstr(dstr_t *p_dstr, const char *old_cstr, const char *new_cstr, size_t n, bool backward);
 
 /**
  * 将一个「动态字符串」中出现一次过多次的子「动态字符串」，替换为另一个「动态字符串」。
@@ -289,7 +289,7 @@ int dstr_replace_cstr(dstr_t *p_dstr, const char *old_cstr, const char *new_cstr
  *  ENOMEM：代表内存分配失败。
  *
  */
-int dstr_replace(dstr_t *p_dstr, const dstr_t *p_old_dstr, const dstr_t *p_new_dstr, size_t n, bool backward);
+size_t dstr_replace(dstr_t *p_dstr, const dstr_t *p_old_dstr, const dstr_t *p_new_dstr, size_t n, bool backward);
 
 /**
  * 判断一个「动态字符串」是否开始于一个 C 字符串。

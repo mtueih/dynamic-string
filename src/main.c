@@ -2,6 +2,15 @@
 #include "dynamic_string.h"
 
 int main(void) {
-    printf("Hello, World!\n");
+    dstr_t *str = dstr_create("Hello World!");
+
+    printf("%s\n", dstr_cstr(str));
+
+    dstr_replace_cstr(str, "l", "LLL", 0, false);
+
+    printf("%s\n", dstr_cstr(str));
+
+
+    dstr_destroy(str);
     return 0;
 }

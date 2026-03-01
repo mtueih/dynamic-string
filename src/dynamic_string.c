@@ -526,76 +526,56 @@ int dstr_sub(dstr_t *p_dst_dstr, const dstr_t *p_src_dstr, size_t index, size_t 
  *  ENOMEM：代表内存分配失败。
  *
  */
-int dstr_replace_cstr(dstr_t *p_dstr, const char *old_cstr, const char *new_cstr, size_t n, bool backward) {
-    size_t old_cstr_length;
-    size_t new_cstr_length;
-    size_t i;
-    int result;
+size_t dstr_replace_cstr(dstr_t *p_dstr, const char *old_cstr, const char *new_cstr, size_t n, bool backward) {
+    // 局部变量声明
     size_t find_count;
     char *find; // 指向当前比较的字符串
-    size_t old_cstr_count;
 
-    if (p_dstr == NULL || old_cstr == NULL || new_cstr == NULL
-        || (old_cstr_length = strlen(old_cstr)) == 0
-        || old_cstr_length > p_dstr->m_length
-    )
-        return EINVAL;
+    // 参数检查
+    assert(p_dstr != NULL
+        && old_cstr != NULL
+        && new_cstr != NULL);
 
-    old_cstr_count = dstr_count_cstr(p_dstr, old_cstr);
-    if (old_cstr_count == 0)
+    if (p_dstr->m_length == 0) return 0;
 
-    find_count = 0;
-    if (backward == false) {
-        find = p_dstr->m_data;
-        while (find <= p_dstr->m_data + p_dstr->m_length - old_cstr_length
-               && (n == 0 ? true : find_count < n)
-        ) {
-            if (strncmp(find, old_cstr, old_cstr_length) == 0) {
-                ++find_count;
-                find += old_cstr_length;
-            } else {
-                ++find;
+    const size_t old_cstr_length = strlen(old_cstr);
+    if (old_cstr_length == 0 || old_cstr_length > p_dstr->m_length) return 0;
+
+    const size_t new_cstr_length = strlen(new_cstr);
+
+
+    // 替换
+    for (find_count = 0, find = backward ? p_dstr->m_data + p_dstr->m_length - old_cstr_length
+            : p_dstr->m_data
+        ; (backward ? find >= p_dstr->m_data : find <= p_dstr->m_data + p_dstr->m_length - old_cstr_length)
+            && (n == 0 ? true : find_count < n)
+        ;
+    ) {
+        if (strncmp(find, old_cstr, old_cstr_length) == 0) {
+            ++find_count;
+            // 替换
+            if (old_cstr_length != new_cstr_length &&
+                find + old_cstr_length < p_dstr->m_data + p_dstr->m_length) {
+                memmove(
+                    find + new_cstr_length,
+                    find + old_cstr_length,
+                    p_dstr->m_data + p_dstr->m_length -
+                        find - old_cstr_length
+                );
             }
-        }
-    } else {
-        find = p_dstr->m_data + p_dstr->m_length - old_cstr_length;
-        while (find >= p_dstr->m_data
-               && (n == 0 ? true : find_count < n)
-        ) {
-            if (strncmp(find, old_cstr, old_cstr_length) == 0) {
-                ++find_count;
-                find -= old_cstr_length;
-            } else {
-                --find;
+            if (new_cstr_length > 0) {
+                memcpy(find, new_cstr, new_cstr_length);
             }
-        }
-    }
+            p_dstr->m_length -= old_cstr_length;
+            p_dstr->m_length += new_cstr_length;
+            p_dstr->m_data[p_dstr->m_length] = '\0';
 
-    if (n == 0 ? find_count == 0 : find_count < n) return EINVAL;
-
-    new_cstr_length = strlen(new_cstr);
-    result = capacity_resize(p_dstr,
-                             p_dstr->m_length - old_cstr_length * find_count
-                             + new_cstr_length * find_count
-    );
-    if (result != 0) return result;
-
-    i = 0;
-    if (backward == false) {
-        for (find = p_dstr->m_data; i < find_count; ++i);
-    } else {
-        find = p_dstr->m_data + p_dstr->m_length - old_cstr_length;
-        while (find >= p_dstr->m_data
-               && (n == 0 ? true : find_count < n)
-        ) {
-            if (strncmp(find, old_cstr, old_cstr_length) == 0) {
-                ++find_count;
-                find -= old_cstr_length;
-            } else {
-                --find;
-            }
+            backward ? (find -= old_cstr_length) : (find += new_cstr_length);
+        } else {
+            backward ? --find : ++find;
         }
     }
+    return find_count;
 }
 
 /**
@@ -616,7 +596,52 @@ int dstr_replace_cstr(dstr_t *p_dstr, const char *old_cstr, const char *new_cstr
  *  ENOMEM：代表内存分配失败。
  *
  */
-int dstr_replace(dstr_t *p_dstr, const dstr_t *p_old_dstr, const dstr_t *p_new_dstr, size_t n, bool backward) {
+size_t dstr_replace(dstr_t *p_dstr, const dstr_t *p_old_dstr, const dstr_t *p_new_dstr, size_t n, bool backward) {
+    // 局部变量声明
+    size_t find_count;
+    char *find; // 指向当前比较的字符串
+
+    // 参数检查
+    assert(p_dstr != NULL
+        && p_old_dstr != NULL
+        && p_new_dstr != NULL);
+
+    if (p_dstr->m_length == 0 || p_old_dstr->m_length == 0 ||
+        p_old_dstr->m_length > p_dstr->m_length) return 0;
+
+
+    // 替换
+    for (find_count = 0, find = backward ? p_dstr->m_data + p_dstr->m_length - p_old_dstr->m_length
+            : p_dstr->m_data
+        ; (backward ? find >= p_dstr->m_data : find <= p_dstr->m_data + p_dstr->m_length - p_old_dstr->m_length)
+            && (n == 0 ? true : find_count < n)
+        ;
+    ) {
+        if (strncmp(find, p_old_dstr->m_data, p_old_dstr->m_length) == 0) {
+            ++find_count;
+            // 替换
+            if (p_old_dstr->m_length != p_new_dstr->m_length &&
+                find + p_old_dstr->m_length < p_dstr->m_data + p_dstr->m_length) {
+                memmove(
+                    find + p_new_dstr->m_length,
+                    find + p_old_dstr->m_length,
+                    p_dstr->m_data + p_dstr->m_length -
+                        find - p_old_dstr->m_length
+                );
+                }
+            if (p_new_dstr->m_length > 0) {
+                memcpy(find, p_new_dstr->m_data, p_new_dstr->m_length);
+            }
+            p_dstr->m_length -= p_old_dstr->m_length;
+            p_dstr->m_length += p_new_dstr->m_length;
+            p_dstr->m_data[p_dstr->m_length] = '\0';
+
+            backward ? (find -= p_old_dstr->m_length) : (find += p_new_dstr->m_length);
+        } else {
+            backward ? --find : ++find;
+        }
+    }
+    return find_count;
 }
 
 /**
