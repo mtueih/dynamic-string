@@ -5,7 +5,10 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 
-add_library(dstr STATIC src/dynamic_string.c)
+add_library(dstr STATIC src/dynamic_string.c
+        include/portable_attributes.h
+include/dynamic_string.h)
+
 target_include_directories(dstr PUBLIC include)
 
 add_executable(dynamic_string src/main.c)

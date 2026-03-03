@@ -7,516 +7,271 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "portable_attributes.h"
 
-#if defined(__GNUC__) || defined(__clang__)
-    #define DARR_NODISCARD __attribute__((warn_unused_result))
-#elif defined(_MSC_VER)
-    #define DARR_NODISCARD _Check_return_
-#else
-    #define DARR_NODISCARD
-#endif
+// ADT 类型别名声明
+typedef struct DynamicString DString;
 
+// API 函数原型（声明）
+// 创建、销毁、清空
+DString *dstr_create(
+    const char *cstr
+) NODISCARD;
 
+void dstr_destroy(
+    DString *dstr
+) NONNULL(1);
+
+void dstr_clear(
+    DString *dstr
+) NONNULL(1);
+
+// 属性获取与设置
+const char *dstr_cstr(
+    const DString *dstr
+) PURE NONNULL(1);
+
+size_t dstr_length(
+    const DString *dstr
+) PURE NONNULL(1);
+
+size_t dstr_capacity(
+    const DString *dstr
+) PURE NONNULL(1);
+
+// 设置容量
+bool dstr_resize_capacity(
+    DString *dstr,
+    size_t new_capacity
+) NONNULL(1);
+
+// 复制、追加、插入、删除
+// 复制、追加、插入完整现有字符串到目标字符串
+bool dstr_cpy_cstr(
+    DString *dest,
+    const char *src
+) NONNULL(1, 2);
+
+bool dstr_cpy(
+    DString *dest,
+    const DString *src
+) NONNULL(1, 2);
+
+bool dstr_cat_cstr(
+    DString *dest,
+    const char *src
+) NONNULL(1, 2);
+
+bool dstr_cat(
+    DString *dest,
+    const DString *src
+) NONNULL(1, 2);
+
+bool dstr_insert_cstr(
+    DString *dest,
+    const char *src,
+    size_t index
+) NONNULL(1, 2);
+
+bool dstr_insert(
+    DString *dest,
+    const DString *src,
+    size_t index
+) NONNULL(1, 2);
+
+// 复制、追加、插入现有字符串的子串到目标字符串
+bool dstr_cpy_sub_cstr(
+    DString *dest,
+    const char *src,
+    size_t sub_index,
+    size_t sub_count
+) NONNULL(1, 2);
+
+bool dstr_cpy_sub(
+    DString *dest,
+    const DString *src,
+    size_t sub_index,
+    size_t sub_count
+) NONNULL(1, 2);
+
+bool dstr_cat_sub_cstr(
+    DString *dest,
+    const char *src,
+    size_t sub_index,
+    size_t sub_count
+) NONNULL(1, 2);
+
+bool dstr_cat_sub(
+    DString *dest,
+    const DString *src,
+    size_t sub_index,
+    size_t sub_count
+) NONNULL(1, 2);
+
+bool dstr_insert_sub_cstr(
+    DString *dest,
+    const char *src,
+    size_t index,
+    size_t sub_index,
+    size_t sub_count
+) NONNULL(1, 2);
+
+bool dstr_insert_sub(
+    DString *dest,
+    const DString *src,
+    size_t index,
+    size_t sub_index,
+    size_t sub_count
+) NONNULL(1, 2);
+
+// 删除子串
+void dstr_remove(
+    DString *dstr,
+    size_t sub_index,
+    size_t sub_count
+) NONNULL(1);
+
+// 删除特定内容
 /**
- * 「动态字符串」类型。
+ * 去除收尾空白字符。
  */
-typedef struct dynamic_string dstr_t;
+void dstr_trim(
+    DString *dstr
+) NONNULL(1);
 
-/**
- * 创建一个「动态字符串」。
- *
- * @param cstr 用来初始化「动态字符串」的 C 字符串。
- *  为 NULL 表示创建空「动态字符串」。
- *
- * @return 「动态字符串」指针。
- *  为 NULL 表示创建失败。
- *
- */
-DARR_NODISCARD
-dstr_t *dstr_create(const char *cstr);
+// 格式化写入
+bool dstr_printf(
+    DString *dstr,
+    const char *format,
+    ...
+) FORMAT(2, 3) NONNULL(1, 2);
 
-/**
- * 销毁一个「动态字符串」。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- */
-void dstr_destroy(dstr_t *p_dstr);
+// 从现有字符串生成新字符串
+// 提取子串
+DString *dstr_sub_cstr(
+    const char *cstr,
+    size_t sub_index,
+    size_t sub_count
+) NODISCARD NONNULL(1);
 
-/**
- * 清空一个「动态字符串」的内容。
- *  不会修改容量，只是让其变为一个空字符串。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- */
-void dstr_clear(dstr_t *p_dstr);
+DString *dstr_sub(
+    const DString *dstr,
+    size_t sub_index,
+    size_t sub_count
+) NODISCARD NONNULL(1);
 
-/**
- * 获取一个「动态字符串」的 C 字符串。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @return C 字符串。
- *
- */
-const char *dstr_cstr(const dstr_t *p_dstr);
+// 克隆
+DString *dstr_clone(
+    const DString *dstr
+) NODISCARD NONNULL(1);
 
-/**
- * 获取一个「动态字符串」的长度。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @return 长度。
- *
- */
-size_t dstr_length(const dstr_t *p_dstr);
+// 查找、统计与替换
+bool dstr_find_cstr(
+    const DString *dstr,
+    const char *sub,
+    size_t *out_index,
+    bool backward
+) NONNULL(1, 2, 3) PURE;
 
-/**
- * 获取一个「动态字符串」的容量。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @return 容量。
- *
- */
-size_t dstr_capacity(const dstr_t *p_dstr);
+bool dstr_find(
+    const DString *dstr,
+    const DString *sub,
+    size_t *out_index,
+    bool backward
+) NONNULL(1, 2, 3) PURE;
 
-/**
- * 设置一个「动态字符串」的容量。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param new_length 新容量。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_resize(dstr_t *p_dstr, size_t new_length);
+size_t dstr_count_cstr(
+    const DString *dstr,
+    const char *sub
+) NONNULL(1, 2) PURE;
 
-/**
- * 将一个 C 字符串赋值给一个「动态字符串」。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param cstr C 字符串。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_assign_cstr(dstr_t *p_dstr, const char *cstr);
+size_t dstr_count(
+    const DString *dstr,
+    const DString *sub
+) NONNULL(1, 2) PURE;
 
-/**
- * 将一个「动态字符串」赋值给另一个「动态字符串」。
- *
- * @param p_dst_dstr 目标「动态字符串」指针。
- *
- * @param p_src_dstr  源「动态字符串」指针。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_assign(dstr_t *p_dst_dstr, const dstr_t *p_src_dstr);
+bool dstr_find_nth_cstr(
+    const DString *dstr,
+    const char *sub,
+    size_t *out_index,
+    size_t n,
+    bool backward
+) NONNULL(1, 2, 3) PURE;
 
-/**
- * 将一个 C 字符串追加到一个「动态字符串」后面。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param cstr C 字符串。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_append_cstr(dstr_t *p_dstr, const char *cstr);
+bool dstr_find_nth(
+    const DString *dstr,
+    const DString *sub,
+    size_t *out_index,
+    size_t n,
+    bool backward
+) NONNULL(1, 2, 3) PURE;
 
-/**
- * 将一个「动态字符串」追加到另一个「动态字符串」后面。
- *
- * @param p_dst_dstr 目标「动态字符串」指针。
- *
- * @param p_src_dstr 源「动态字符串」指针。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_append(dstr_t *p_dst_dstr, const dstr_t *p_src_dstr);
+size_t dstr_replace_cstr(
+    DString *dstr,
+    const char *old,
+    const char *new,
+    size_t n,
+    bool backward
+) NONNULL(1, 2, 3);
 
-/**
- * 将一个 C 字符串插入到一个「动态字符串」的指定索引处。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param cstr C 字符串。
- *
- * @param index 插入位置的索引。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_insert_cstr(dstr_t *p_dstr, const char *cstr, size_t index);
+size_t dstr_replace(
+    DString *dstr,
+    const DString *old,
+    const DString *new,
+    size_t n,
+    bool backward
+) NONNULL(1, 2, 3);
 
-/**
- * 将一个「动态字符串」插入到另一个「动态字符串」的指定索引处。
- *
- * @param p_dst_dstr 目标「动态字符串」指针。
- *
- * @param p_src_dstr 源「动态字符串」字符串。
- *
- * @param index 插入位置的索引。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_insert(dstr_t *p_dst_dstr, const dstr_t *p_src_dstr, size_t index);
+// 判断与比较
+bool dstr_starts_with_cstr(
+    const DString *dstr,
+    const char *prefix
+) NONNULL(1, 2) PURE;
 
-/**
- * 从一个「动态字符串」中，删除从指定索引出开始，向后的指定数量的字符。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param index 起始位置的索引。
- *
- * @param quantity 删除的数量，为 0 表示删除至末尾。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_remove(dstr_t *p_dstr, size_t index, size_t quantity);
+bool dstr_starts_with(
+    const DString *dstr,
+    const DString *prefix
+) NONNULL(1, 2) PURE;
 
-/**
- * 写入一个格式化字符串到一个「动态字符串」中。
- * @param p_dstr 「动态字符串」指针。
- *
- * @param format 格式字符串。
- *
- * @param ... 可变参数列表。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_printf(dstr_t *p_dstr, const char *format, ...);
+bool dstr_ends_with_cstr(
+    const DString *dstr,
+    const char *suffix
+) NONNULL(1, 2) PURE;
 
-/**
- * 从一个 C 字符串中提取一个子字符串，并写入一个「动态字符串」中。
- *
- * @param p_dstr 目标「动态字符串」指针。
- *
- * @param cstr 被提取 C 字符串。
- *
- * @param index 提取的起始位置的索引。
- *
- * @param quantity 提取的字符数量，为 0 表示提取至末尾。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_sub_cstr(dstr_t *p_dstr, const char *cstr, size_t index, size_t quantity);
+bool dstr_ends_with(
+    const DString *dstr,
+    const DString *suffix
+) NONNULL(1, 2) PURE;
 
-/**
- * 从一个「动态字符串」中提取一个子字符串，并写入另一个「动态字符串」中。
- *
- * @param p_dst_dstr 目标「动态字符串」指针。
- *
- * @param p_src_dstr 被提取「动态字符串」。
- *
- * @param index 提取的起始位置的索引。
- *
- * @param quantity 提取的字符数量，为 0 表示提取至末尾。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-int dstr_sub(dstr_t *p_dst_dstr, const dstr_t *p_src_dstr, size_t index, size_t quantity);
+bool dstr_contains_cstr(
+    const DString *dstr,
+    const char *sub
+) NONNULL(1, 2) PURE;
 
-/**
- * 将一个「动态字符串」中出现一次过多次的 C 字符串，替换为另一个 C 字符串。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param old_cstr 原 C 字符串。
- *
- * @param new_cstr 新 C 字符串。
- *
- * @param n 替换的次数，为 0 表示替换全部。
- *
- * @param backward 是否反向替换（从右向左替换）。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-size_t dstr_replace_cstr(dstr_t *p_dstr, const char *old_cstr, const char *new_cstr, size_t n, bool backward);
+bool dstr_contains(
+    const DString *dstr,
+    const DString *sub
+) NONNULL(1, 2) PURE;
 
-/**
- * 将一个「动态字符串」中出现一次过多次的子「动态字符串」，替换为另一个「动态字符串」。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param p_old_dstr 原「动态字符串」。
- *
- * @param p_new_dstr 新「动态字符串」。
- *
- * @param n 替换的次数，为 0 表示替换全部。
- *
- * @param backward 是否反向替换（从右向左替换）。
- *
- * @return 0 表示成功，非 0 表示失败：
- *  EINVAL：代表参数错误；
- *  ENOMEM：代表内存分配失败。
- *
- */
-size_t dstr_replace(dstr_t *p_dstr, const dstr_t *p_old_dstr, const dstr_t *p_new_dstr, size_t n, bool backward);
+bool dstr_equals_cstr(
+    const DString *dstr,
+    const char *cstr
+) NONNULL(1, 2) PURE;
 
-/**
- * 判断一个「动态字符串」是否开始于一个 C 字符串。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param prefix 前缀 C 字符串。
- *
- */
-bool dstr_starts_with_cstr(const dstr_t *p_dstr, const char *prefix);
+bool dstr_equals(
+    const DString *dstr_1,
+    const DString *dstr_2
+) NONNULL(1, 2) PURE;
 
-/**
- * 判断一个「动态字符串」是否开始于另一个「动态字符串」。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param prefix 前缀「动态字符串」。
- *
- */
-bool dstr_starts_with(const dstr_t *p_dstr, const dstr_t *prefix);
+int dstr_compare_cstr(
+    const DString *dstr,
+    const char *cstr
+) NONNULL(1, 2) PURE;
 
-/**
- * 判断一个「动态字符串」是否结束于一个 C 字符串。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param suffix 后缀 C 字符串。
- *
- */
-bool dstr_ends_with_cstr(const dstr_t *p_dstr, const char *suffix);
+int dstr_compare(
+    const DString *dstr_1,
+    const DString *dstr_2
+) NONNULL(1, 2) PURE;
 
-/**
- * 判断一个「动态字符串」是否结束于另一个「动态字符串」。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param suffix 后缀「动态字符串」。
- *
- */
-bool dstr_ends_with(const dstr_t *p_dstr, const dstr_t *suffix);
-
-/**
- * 判断一个「动态字符串」是否包含一个 C 字符串。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param sub_cstr 包含的 C 字符串。
- *
- */
-bool dstr_contains_cstr(const dstr_t *p_dstr, const char *sub_cstr);
-
-/**
- * 判断一个「动态字符串」是否包含另一个「动态字符串」。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param p_sub_dstr 包含的「动态字符串」。
- *
- */
-bool dstr_contains(const dstr_t *p_dstr, const dstr_t *p_sub_dstr);
-
-/**
- * 判断一个「动态字符串」是否等于一个 C 字符串。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param cstr C 字符串。
- *
- */
-bool dstr_equals_cstr(const dstr_t *p_dstr, const char *cstr);
-
-/**
- * 判断一个「动态字符串」是否等于另一个「动态字符串」。
- *
- * @param p_dstr_1 「动态字符串」1 的指针。
- *
- * @param p_dstr_2 「动态字符串」2 的指针。
- *
- */
-bool dstr_equals(const dstr_t *p_dstr_1, const dstr_t *p_dstr_2);
-
-/**
- * 比较一个「动态字符串」和一个 C 字符串。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param cstr  C 字符串。
- *
- * @return 为 0 表示两者相等；为正数表示前者 > 后者；为负数表示前者 < 后者。
- *
- */
-int dstr_compare_cstr(const dstr_t *p_dstr, const char *cstr);
-
-/**
- * 比较两个「动态字符串」。
- *
- * @param p_dstr_1 「动态字符串」1 的指针。
- *
- * @param p_dstr_2 「动态字符串」2 的指针。
- *
- * @return 为 0 表示两者相等；为正数表示前者 > 后者；为负数表示前者 < 后者。
- *
- */
-int dstr_compare(const dstr_t *p_dstr_1, const dstr_t *p_dstr_2);
-
-/**
- * 在一个「动态字符串」中查找一个 C 字符串第一次出现的位置。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param sub_cstr 要查找的 C 字符串。
- *
- * @param p_index 指向一个 size_t 变量，该变量用于存储查找到的位置索引。
- *  如果找到，函数返回 true，并将出现的位置索引写入该指针指向的变量；
- *  如果没找到，函数返回 false，并不会修改该指针指向的值。
- *
- * @return 表示是否查找到了。
- *
- */
-bool dstr_find_cstr(const dstr_t *p_dstr, const char *sub_cstr, size_t *p_index);
-
-/**
- * 在一个「动态字符串」中查找另一个「动态字符串」第一次出现的位置。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param p_sub_dstr 要查找的「动态字符串」的指针。
- *
- * @param p_index 指向一个 size_t 变量，该变量用于存储查找到的位置索引。
- *  如果找到，函数返回 true，并将出现的位置索引写入该指针指向的变量；
- *  如果没找到，函数返回 false，并不会修改该指针指向的值。
- *
- * @return 表示是否查找到了。
- *
- */
-bool dstr_find(const dstr_t *p_dstr, const dstr_t *p_sub_dstr, size_t *p_index);
-
-/**
- * 在一个「动态字符串」中查找一个 C 字符串最后一次出现的位置（从右往左查找）。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param sub_cstr 要查找的 C 字符串。
- *
- * @param p_index 指向一个 size_t 变量，该变量用于存储查找到的位置索引。
- *  如果找到，函数返回 true，并将出现的位置索引写入该指针指向的变量；
- *  如果没找到，函数返回 false，并不会修改该指针指向的值。
- *
- * @return 表示是否查找到了。
- *
- */
-bool dstr_rfind_cstr(const dstr_t *p_dstr, const char *sub_cstr, size_t *p_index);
-
-/**
- * 在一个「动态字符串」中查找另一个「动态字符串」最后一次出现的位置（从右往左查找）。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param p_sub_dstr 要查找的「动态字符串」的指针。
- *
- * @param p_index 指向一个 size_t 变量，该变量用于存储查找到的位置索引。
- *  如果找到，函数返回 true，并将出现的位置索引写入该指针指向的变量；
- *  如果没找到，函数返回 false，并不会修改该指针指向的值。
- *
- * @return 表示是否查找到了。
- *
- */
-bool dstr_rfind(const dstr_t *p_dstr, const dstr_t *p_sub_dstr, size_t *p_index);
-
-/**
- * 统计一个「动态字符串」中，一个 C 字符串出现的次数。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param sub_cstr 要查找的子 C 字符串。
- *
- * @return 出现的次数。
- *
- */
-size_t dstr_count_cstr(const dstr_t *p_dstr, const char *sub_cstr);
-
-/**
- * 统计一个「动态字符串」中，另一个「动态字符串」出现的次数。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param p_sub_dstr 要查找的子「动态字符串」的指针。
- *
- * @return 出现的次数。
- *
- */
-size_t dstr_count(const dstr_t *p_dstr, const dstr_t *p_sub_dstr);
-
-/**
- * 获取一个「动态字符串」中，一个 C 字符串第 n 次出现的位置索引。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param sub_cstr 要查找的子 C 字符串。
- *
- * @param p_index 指向一个 size_t 变量，该变量用于存储查找到的位置索引。
- *  如果找到，函数返回 true，并将出现的位置索引写入该指针指向的变量；
- *  如果没找到，函数返回 false，并不会修改该指针指向的值。
- *
- * @param n 表示要查找第 n 次出现。n 从 1 开始。
- *
- * @return 表示是否查找到了。
- *
- */
-bool dstr_find_nth_cstr(const dstr_t *p_dstr, const char *sub_cstr, size_t *p_index, size_t n);
-
-/**
- * 获取一个「动态字符串」中，另一个「动态字符串」第 n 次出现的位置索引。
- *
- * @param p_dstr 「动态字符串」指针。
- *
- * @param p_sub_dstr 要查找的子「动态字符串」的指针。
- *
- * @param p_index 指向一个 size_t 变量，该变量用于存储查找到的位置索引。
- *  如果找到，函数返回 true，并将出现的位置索引写入该指针指向的变量；
- *  如果没找到，函数返回 false，并不会修改该指针指向的值。
- *
- * @param n 表示要查找第 n 次出现。n 从 1 开始。
- *
- * @return 表示是否查找到了。
- *
- */
-bool dstr_find_nth(const dstr_t *p_dstr, const dstr_t *p_sub_dstr, size_t *p_index, size_t n);
 
 #endif // DYNAMIC_STRING_H
